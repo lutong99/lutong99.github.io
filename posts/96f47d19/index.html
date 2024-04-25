@@ -1,0 +1,276 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>学习过程中的部分问题和集合源码理解 | Lutong99</title><meta name="author" content="Lutong99"><meta name="copyright" content="Lutong99"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="问题ArrayList, LinkedList, Vector 的异同同: 三个类都实现了List接口, 存储数据的特点(有序可重复)相同. 底层都是Object[]存储的.不同点:        ArrayList : 作为List接口的主要实现类, 1.2, 执行效率高, 线程不安全;        Vector : 作为List的古老实现类, since JDK1.0, List是1.2">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习过程中的部分问题和集合源码理解">
+<meta property="og:url" content="https://blog.lutong99.cn/posts/96f47d19/index.html">
+<meta property="og:site_name" content="Lutong99">
+<meta property="og:description" content="问题ArrayList, LinkedList, Vector 的异同同: 三个类都实现了List接口, 存储数据的特点(有序可重复)相同. 底层都是Object[]存储的.不同点:        ArrayList : 作为List接口的主要实现类, 1.2, 执行效率高, 线程不安全;        Vector : 作为List的古老实现类, since JDK1.0, List是1.2">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2020-04-11T19:56:13.000Z">
+<meta property="article:modified_time" content="2024-04-25T11:18:35.338Z">
+<meta property="article:author" content="Lutong99">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="JavaSE">
+<meta property="article:tag" content="HashMap">
+<meta property="article:tag" content="LinkedList">
+<meta property="article:tag" content="源码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/favicon/favicon.ico"><link rel="canonical" href="https://blog.lutong99.cn/posts/96f47d19/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: {"appId":"DTIDWRO6KW","apiKey":"d77c54211c2e9692da82bbe17f015244","indexName":"dev_blog_contents","hits":{"per_page":6},"languages":{"input_placeholder":"搜索文章","hits_empty":"找不到您查询的内容：${query}","hits_stats":"找到 ${hits} 条结果，用时 ${time} 毫秒"}},
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '学习过程中的部分问题和集合源码理解',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-25 11:18:35'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/avatar/avatar512.png" onerror="onerror=null;src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">48</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">68</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">22</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/messages/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Lutong99"><img class="site-icon" src="https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/favicon/favicon.ico"/><span class="site-name">Lutong99</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/messages/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">学习过程中的部分问题和集合源码理解</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-04-11T19:56:13.000Z" title="发表于 2020-04-11 19:56:13">2020-04-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-25T11:18:35.338Z" title="更新于 2024-04-25 11:18:35">2024-04-25</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Java/">Java</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Java/JavaSE/">JavaSE</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="学习过程中的部分问题和集合源码理解"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><hr>
+
+<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><h2 id="ArrayList-LinkedList-Vector-的异同"><a href="#ArrayList-LinkedList-Vector-的异同" class="headerlink" title="ArrayList, LinkedList, Vector 的异同"></a>ArrayList, LinkedList, Vector 的异同</h2><p><strong>同:</strong> 三个类都实现了List接口, 存储数据的特点(有序可重复)相同. 底层都是Object[]存储的.<br><strong>不同点:</strong><br>        <strong>ArrayList</strong> : 作为List接口的主要实现类, 1.2, 执行效率高, 线程不安全;<br>        <strong>Vector :</strong> 作为List的古老实现类, since JDK1.0, List是1.2出现的; 线程安全的, 效率低.<br>        <strong>LinkedList</strong> : 底层结构使用双向链表存储的. 对于频繁的插入和删除操作, 使用此类比ArrayList效率高.</p>
+<hr>
+
+<h2 id="集合Collection中存储的如果是自定义类的对象-需要自定义的方法"><a href="#集合Collection中存储的如果是自定义类的对象-需要自定义的方法" class="headerlink" title="集合Collection中存储的如果是自定义类的对象, 需要自定义的方法"></a>集合Collection中存储的如果是自定义类的对象, 需要自定义的方法</h2><p><strong>Collection:</strong> 需要重写equals() 方法<br><strong>List:</strong> 也需要重写equals() 方法,<br><strong>Set:</strong> HashSet, LinkedHashSet, 重写equals(), hashCode();<br><strong>TreeSet:</strong> 需要实现Comparable或者Comparator. 在使用构造器的时候会有一个TreeSet(Comparator comparator) 的构造方法. 在比较的时候使用, 它是使用二叉树(红黑树)在底层进行存储的.</p>
+<hr>
+
+<h2 id="Map结构的理解"><a href="#Map结构的理解" class="headerlink" title="Map结构的理解"></a>Map结构的理解</h2><p><strong>Map :</strong> 双列数据, 存储key-value键值对, —-类似于高中的函数<br><strong>HashMap:</strong> Map的主要实现类, 线程不安全, 效率高, 存储null的key和value<br><strong>LinkedHashMap:</strong> 保证在遍历Map元素时候, 可以按照添加的顺序实现遍历<br><em><strong>原因:</strong></em> 在原有的HashMap底层结构基础上, 添加了一对指针, 指向前一个和后一个元素,<br>                    对于频繁的遍历操作, 此类执行效率高于HashMap.<br><strong>TreeMap:</strong> 保证按照添加的key-value进行排序, 实现排序遍历. 按照key来排序. 此时考虑key的自然能排序, 或者定制排序.<br>                底层使用了红黑树.<br><strong>Hashtable:</strong> 古老实现类: 作为古老的实现类, 效率不高, 线程安全, 不能存储null的key和value. 随便哪个是null都不行.<br><strong>Properties:</strong> 常用来处理配置文件. key和value都是String类型的.HashMap的底层: 数组+链表(JDK7之前的版本) 数组+链表+红黑树(JDK8)</p>
+<hr>
+
+<p>Map中的 <strong>Key</strong>: 无序的, 不可重复的, 使用Set存储所有的Key. —&gt;Key所在的类要重写equals()和hashCode(), 以HashMap为例.<br>Map中的 <strong>Value</strong>: 无序的, 可重复的, 是哟个Collection的存储所有的value —&gt; Value所在的类要重写equals()方法<br>Map中的 <strong>entry</strong>: 无需的, 不可重复的, 使用Set存储entry</p>
+<hr>
+
+<h2 id="同步代码块中同步监视器和共享数据的理解"><a href="#同步代码块中同步监视器和共享数据的理解" class="headerlink" title="同步代码块中同步监视器和共享数据的理解"></a>同步代码块中同步监视器和共享数据的理解</h2><p><strong>同步监视器:</strong> 俗称锁<br>1、任何对象都可以充当锁<br>2、多个线程需要使用同一个锁<br><strong>共享数据:</strong> 多个线程共同操作的数据, 即为共享数据</p>
+<p><em>需要使用同步机制, 将操作共享数据的代码包裹起来, 包裹的时候不可以多, 也不可以少</em></p>
+<hr>
+
+<h2 id="Set子类理解"><a href="#Set子类理解" class="headerlink" title="Set子类理解"></a>Set子类理解</h2><p><strong>HashSet :</strong> Set的主要实现类, 线程不安全.<br><strong>LinkedHashSet :</strong> 作为HashSet的子类, 遍历其中的数据时, 可以按照添加的顺序去遍历, (和有序有区别)<br><strong>TreeSet :</strong> 数据类型要相同, 我们要对这个进行排序. 可以按照添加的对象的指定属性, 进行排序.</p>
+<hr>
+
+<h2 id="集合Collection中存储的如果是自定义类的对象-需要自定义的方法-1"><a href="#集合Collection中存储的如果是自定义类的对象-需要自定义的方法-1" class="headerlink" title="集合Collection中存储的如果是自定义类的对象, 需要自定义的方法"></a>集合Collection中存储的如果是自定义类的对象, 需要自定义的方法</h2><p><strong>Collection:</strong> 需要重写equals() 方法<br><strong>List:</strong> 也需要重写equals() 方法,<br><strong>Set:</strong> HashSet, LinkedHashSet, 重写equals(), hashCode();<br><strong>TreeSet:</strong> 需要实现Comparable或者Comparator. 在使用构造器的时候会有一个TreeSet(Comparator comparator) 的构造方法. 在比较的时候使用, 它是使用二叉树(红黑树)在底层进行存储的.</p>
+<hr>
+
+
+<h1 id="二、源码"><a href="#二、源码" class="headerlink" title="二、源码"></a>二、源码</h1><h2 id="List-类"><a href="#List-类" class="headerlink" title="List 类"></a>List 类</h2><h3 id="ArrayList源码理解-jdk7-和jdk8-稍有不同"><a href="#ArrayList源码理解-jdk7-和jdk8-稍有不同" class="headerlink" title="ArrayList源码理解(jdk7 和jdk8 稍有不同)"></a>ArrayList源码理解(jdk7 和jdk8 稍有不同)</h3><ul>
+<li><strong>jdk7</strong><br>ArrayList list &#x3D; new ArrayList(); &#x2F;&#x2F; 底层创建了长度是10的Object[]数组, elementData<br>          list.add(123) ;<br>          &#x2F;&#x2F; elementData[0] &#x3D; 123;<br>          ….<br>          list.add(11);<br>          &#x2F;&#x2F; 如果此次的添加导致底层elementData数组的容量不够, 则扩容. 默认情况下, 扩容为原来容量1.5倍, 同时需要将原有数组中的内容复制到现有数组中.<br>          &#x2F;&#x2F; 建议使用带有参数的ArrayList的构造器<br>          ArrayList list &#x3D; new ArrayList(50);<br>          有点像懒汉式单例模式</li>
+<li><strong>jdk8 中的变化</strong><br>ArrayList list &#x3D; new ArrayList();<br>&#x2F;&#x2F; 底层Object[] elementData 初始化为{}, 没有创建10的默认代码.<br>list.add(123);<br>&#x2F;&#x2F; 第一次调用add() 方法时, 底层才创建了长度为10的数组, 并将元素放在了, elementData中.                …<br>&#x2F;&#x2F; 后来的方法执行和JDK7的几乎没有区别.<br>有点像饿汉式单例模式</li>
+<li>总结:<br>JDK7中对象的创建类似于单例模式中的饿汉式, JDK8中的类似于单例模式中的懒汉式<hr></li>
+</ul>
+<h3 id="LinkedList源码理解"><a href="#LinkedList源码理解" class="headerlink" title="LinkedList源码理解"></a>LinkedList源码理解</h3><p>LinkedList list &#x3D; new LinkedList(); &#x2F;&#x2F; 内部声明了一个Node类型的first&amp;last默认为null,<br>            list.add(123); &#x2F;&#x2F; 将123封装到Node中, 创建了Node变量<br>            &#x2F;&#x2F; 其中Node定义为</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Node</span>&lt;E&gt; &#123;</span><br><span class="line">    E item;</span><br><span class="line">    Node&lt;E&gt; next;</span><br><span class="line">    Node&lt;E&gt; prev;</span><br><span class="line">    Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) &#123;</span><br><span class="line">        <span class="built_in">this</span>.item = element;</span><br><span class="line">        <span class="built_in">this</span>.next = next;</span><br><span class="line">        <span class="built_in">this</span>.prev = prev;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>体现了LinkedList的双向链表的说法</p>
+<hr>
+
+
+<h3 id="Vector源码理解"><a href="#Vector源码理解" class="headerlink" title="Vector源码理解"></a>Vector源码理解</h3><p>JDK7和JDK8中通过Vector()构造器创建对象时, 底层都创建了10个默认容量, 扩容的时候, 扩容两倍.</p>
+<hr>
+
+
+<h2 id="Map类"><a href="#Map类" class="headerlink" title="Map类"></a>Map类</h2><h3 id="HashMap的源码理解"><a href="#HashMap的源码理解" class="headerlink" title="HashMap的源码理解"></a>HashMap的源码理解</h3><ul>
+<li><strong>JDK7</strong><ul>
+<li><p>HashMap map &#x3D; new HashMap();<br>  在实例化之后, 底层创建了长度16的一维数组Entry[] table.<br>  ….已经执行过put….<br>  map.put(key0, value0);<br>  &#x2F;&#x2F; 首先, 计算key0的hashCode(), 根据此Hash值得到在entry数组中的存放位置. 如果此位置上的数据为空, 此时的key0-value0添加成功. 如果此位置上不为空. (一个或多个数据以链表的形式存在的), 比较当前的key…..<br>  如果key0的哈希值与已经存在的hash值都不相同, 则添加成功.<br>  如果key0的哈希值, 与已经存在的哈希值相同, 继续比较equals(), 返回false, 添加成功, 返回true, 使用value0替换相同key的value值.
+  </p>
+</li>
+<li><p>补充: 有数据的时候, key-value和原来的数据以链表的方式存储. 在不断的添加过程中, 会涉及到扩容问题. 当超出临界值(threshold)的时候(并且要存放的位置非空的时候)就会扩容为原来的2倍, 并将原有的数据复制过来.</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+
+
+<ul>
+<li><p><strong>JDK8</strong></p>
+<ul>
+<li>new HashMap(), 底层没有创建一个长度为16的数组.</li>
+<li>JDK8底层的数组是Node[], 不是Entry</li>
+<li>首次调用put方法时, 底层去创建长度为16的数组.</li>
+<li>JDK7底层结构只有数组+链表, JDK8底层结构, 数据+链表+红黑树.</li>
+<li>当数组的某一个索引位置上的元素以链表形式存在的数据个数大于8且当前数组的长度超过64,</li>
+<li>此时此索引位置上的所有数据改为使用红黑树存储.</li>
+</ul>
+</li>
+</ul>
+<hr>
+
+<h3 id="LinkedHashMap-的底层理解"><a href="#LinkedHashMap-的底层理解" class="headerlink" title="LinkedHashMap 的底层理解."></a>LinkedHashMap 的底层理解.</h3><ul>
+<li>源码中的Entry拓展了<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Entry</span>&lt;K,V&gt; <span class="keyword">extends</span> <span class="title class_">HashMap</span>.Node&lt;K,V&gt; &#123;</span><br><span class="line">	Entry&lt;K,V&gt; before, after; <span class="comment">// 能够记录添加的元素的先后顺序.</span></span><br><span class="line">	Entry(<span class="type">int</span> hash, K key, V value, Node&lt;K,V&gt; next) &#123;</span><br><span class="line">		<span class="built_in">super</span>(hash, key, value, next);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr></li>
+</ul>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>虽然现在JDK已经更新到JDK14了，可是大多数肯定还是在使用低版本的JDK，比如我今天才刚刚更新到JDK11 LST但是依然可以从以前的JDK的更新中获得很大的收益。</p>
+<p>学习不止，加油</p>
+<hr>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.lutong99.cn">Lutong99</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.lutong99.cn/posts/96f47d19/">https://blog.lutong99.cn/posts/96f47d19/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://blog.lutong99.cn" target="_blank">Lutong99</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a><a class="post-meta__tags" href="/tags/Java/">Java</a><a class="post-meta__tags" href="/tags/JavaSE/">JavaSE</a><a class="post-meta__tags" href="/tags/HashMap/">HashMap</a><a class="post-meta__tags" href="/tags/LinkedList/">LinkedList</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81/">源码</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" data-sites="wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/154a329b/" title="java.lang.NoSuchMethodError:org.springframework.util.ClassUtils.getQualifiedMethodName"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">java.lang.NoSuchMethodError:org.springframework.util.ClassUtils.getQualifiedMethodName</div></div></a></div><div class="next-post pull-right"><a href="/posts/25275db8/" title="编码规范个人理解"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">编码规范个人理解</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/posts/ce743564/" title="HashSet与HashMap底层部分细讲"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-08-03</div><div class="title">HashSet与HashMap底层部分细讲</div></div></a></div><div><a href="/posts/89e9c259/" title="一个井字小游戏所引发的思考"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2019-08-06</div><div class="title">一个井字小游戏所引发的思考</div></div></a></div><div><a href="/posts/105dc35c/" title="求两个字符串的最大子串"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2019-07-24</div><div class="title">求两个字符串的最大子串</div></div></a></div><div><a href="/posts/3283edbc/" title="整数栈的pop"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2019-06-03</div><div class="title">整数栈的pop</div></div></a></div><div><a href="/posts/6b5fe4e0/" title="二叉搜索树的代码实现(C, Java)"><img class="cover" src="https://lutong99-static.oss-cn-beijing.aliyuncs.com/blog/new/2023/20230411120616" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2019-09-30</div><div class="title">二叉搜索树的代码实现(C, Java)</div></div></a></div><div><a href="/posts/ea1e6cb1/" title="ArrayList去除重复的值"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2019-06-08</div><div class="title">ArrayList去除重复的值</div></div></a></div></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="waline-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/avatar/avatar512.png" onerror="this.onerror=null;this.src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Lutong99</div><div class="author-info__description">我曾以为我的人生是一场悲剧，现在才发现，是一场喜剧！</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">48</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">68</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">22</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/lutong99"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/lutong99" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:lutong99@aliyun.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a><a class="social-icon" href="https://space.bilibili.com/353685377" target="_blank" title="Bilibili"><i class="fa-brands fa-bilibili"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">感谢各位朋友的观看，谢谢大家</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#ArrayList-LinkedList-Vector-%E7%9A%84%E5%BC%82%E5%90%8C"><span class="toc-number">1.1.</span> <span class="toc-text">ArrayList, LinkedList, Vector 的异同</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9B%86%E5%90%88Collection%E4%B8%AD%E5%AD%98%E5%82%A8%E7%9A%84%E5%A6%82%E6%9E%9C%E6%98%AF%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E7%9A%84%E5%AF%B9%E8%B1%A1-%E9%9C%80%E8%A6%81%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E6%96%B9%E6%B3%95"><span class="toc-number">1.2.</span> <span class="toc-text">集合Collection中存储的如果是自定义类的对象, 需要自定义的方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Map%E7%BB%93%E6%9E%84%E7%9A%84%E7%90%86%E8%A7%A3"><span class="toc-number">1.3.</span> <span class="toc-text">Map结构的理解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81%E5%9D%97%E4%B8%AD%E5%90%8C%E6%AD%A5%E7%9B%91%E8%A7%86%E5%99%A8%E5%92%8C%E5%85%B1%E4%BA%AB%E6%95%B0%E6%8D%AE%E7%9A%84%E7%90%86%E8%A7%A3"><span class="toc-number">1.4.</span> <span class="toc-text">同步代码块中同步监视器和共享数据的理解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Set%E5%AD%90%E7%B1%BB%E7%90%86%E8%A7%A3"><span class="toc-number">1.5.</span> <span class="toc-text">Set子类理解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9B%86%E5%90%88Collection%E4%B8%AD%E5%AD%98%E5%82%A8%E7%9A%84%E5%A6%82%E6%9E%9C%E6%98%AF%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E7%9A%84%E5%AF%B9%E8%B1%A1-%E9%9C%80%E8%A6%81%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E6%96%B9%E6%B3%95-1"><span class="toc-number">1.6.</span> <span class="toc-text">集合Collection中存储的如果是自定义类的对象, 需要自定义的方法</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%BA%90%E7%A0%81"><span class="toc-number">2.</span> <span class="toc-text">二、源码</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#List-%E7%B1%BB"><span class="toc-number">2.1.</span> <span class="toc-text">List 类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ArrayList%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3-jdk7-%E5%92%8Cjdk8-%E7%A8%8D%E6%9C%89%E4%B8%8D%E5%90%8C"><span class="toc-number">2.1.1.</span> <span class="toc-text">ArrayList源码理解(jdk7 和jdk8 稍有不同)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LinkedList%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3"><span class="toc-number">2.1.2.</span> <span class="toc-text">LinkedList源码理解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Vector%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3"><span class="toc-number">2.1.3.</span> <span class="toc-text">Vector源码理解</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Map%E7%B1%BB"><span class="toc-number">2.2.</span> <span class="toc-text">Map类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#HashMap%E7%9A%84%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3"><span class="toc-number">2.2.1.</span> <span class="toc-text">HashMap的源码理解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LinkedHashMap-%E7%9A%84%E5%BA%95%E5%B1%82%E7%90%86%E8%A7%A3"><span class="toc-number">2.2.2.</span> <span class="toc-text">LinkedHashMap 的底层理解.</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/668d95d2/" title="服务器软件使用说明"><img src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="this.onerror=null;this.src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/404.jpg'" alt="服务器软件使用说明"/></a><div class="content"><a class="title" href="/posts/668d95d2/" title="服务器软件使用说明">服务器软件使用说明</a><time datetime="2024-04-25T11:28:38.000Z" title="发表于 2024-04-25 11:28:38">2024-04-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/3d06a9ae/" title="YOLOv5理解学习"><img src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="this.onerror=null;this.src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/404.jpg'" alt="YOLOv5理解学习"/></a><div class="content"><a class="title" href="/posts/3d06a9ae/" title="YOLOv5理解学习">YOLOv5理解学习</a><time datetime="2023-04-14T17:31:47.000Z" title="发表于 2023-04-14 17:31:47">2023-04-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/e090702b/" title="YOLOv4理解学习"><img src="https://lutong99-static.oss-cn-beijing.aliyuncs.com/blog/new/2023/20230414172839.jpeg" onerror="this.onerror=null;this.src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/404.jpg'" alt="YOLOv4理解学习"/></a><div class="content"><a class="title" href="/posts/e090702b/" title="YOLOv4理解学习">YOLOv4理解学习</a><time datetime="2023-04-14T17:31:42.000Z" title="发表于 2023-04-14 17:31:42">2023-04-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/ba6c2e88/" title="Windows下利用excel完成批量命名"><img src="https://lutong99-static.oss-cn-beijing.aliyuncs.com/blog/new/2023/20230414165756.png" onerror="this.onerror=null;this.src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/404.jpg'" alt="Windows下利用excel完成批量命名"/></a><div class="content"><a class="title" href="/posts/ba6c2e88/" title="Windows下利用excel完成批量命名">Windows下利用excel完成批量命名</a><time datetime="2023-04-14T16:39:15.000Z" title="发表于 2023-04-14 16:39:15">2023-04-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/5ba84ae0/" title="在夜晚中的一点点小想法"><img src="https://lutong99-static.oss-cn-beijing.aliyuncs.com/blog/new/2023/20230409231645.JPG" onerror="this.onerror=null;this.src='https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/themes/404.jpg'" alt="在夜晚中的一点点小想法"/></a><div class="content"><a class="title" href="/posts/5ba84ae0/" title="在夜晚中的一点点小想法">在夜晚中的一点点小想法</a><time datetime="2023-03-24T22:24:18.000Z" title="发表于 2023-03-24 22:24:18">2023-03-24</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2023 - 2024 By Lutong99</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  let initFn = window.walineFn || null
+
+  const initWaline = (Fn) => {
+    const waline = Fn(Object.assign({
+      el: '#waline-wrap',
+      serverURL: 'comments.lucy102.cn',
+      pageview: false,
+      dark: 'html[data-theme="dark"]',
+      path: window.location.pathname,
+      comment: false,
+    }, {"reaction":["https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/weibo/weibo_sob.png","https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/weibo/weibo_dog_consider.png","https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/weibo/weibo_dog_joy.png","https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/tieba/tieba_awkward.png","https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/tieba/tieba_agree.png","https://lutong99-static.oss-cn-beijing.aliyuncs.com/assets/img/tieba/tieba_look_down.png"],"lang":"zh-CN","locale":{"placeholder":"请务必文明留言哦，不然会被删除的, 留下邮箱可以收到回复通知哦~","sofa":"请务必文明留言哦，不然会被删除的~","reactionTitle":"你认为这篇怎么样？","comment":"留言"}}))
+
+    const destroyWaline = () => {
+      waline.destroy()
+    }
+
+    btf.addGlobalFn('pjax', destroyWaline, 'destroyWaline')
+  }
+
+  const loadWaline = async () => {
+    if (initFn) initWaline(initFn)
+    else {
+      await getCSS('https://cdn.jsdelivr.net/npm/@waline/client/dist/waline.min.css')
+      const { init } = await import('https://cdn.jsdelivr.net/npm/@waline/client/dist/waline.min.js')
+      initFn = init || Waline.init
+      initWaline(initFn)
+      window.walineFn = initFn
+    }
+  }
+
+  if ('Waline' === 'Waline' || !true) {
+    if (true) btf.loadComment(document.getElementById('waline-wrap'),loadWaline)
+    else setTimeout(loadWaline, 0)
+  } else {
+    window.loadOtherComment = loadWaline
+  }
+})()</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-heart.min.js" async="async" mobile="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="algolia-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="search-wrap"><div id="algolia-search-input"></div><hr/><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-info"><div class="algolia-stats"></div><div class="algolia-poweredBy"></div></div></div></div></div><div id="search-mask"></div><script src="https://cdn.jsdelivr.net/npm/algoliasearch/dist/algoliasearch-lite.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instantsearch.js/dist/instantsearch.production.min.js"></script><script src="/js/search/algolia.js"></script></div></div></body></html>
